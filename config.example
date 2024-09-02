@@ -1,2 +1,5 @@
 [Apis]
 REBRICKABLE_API_KEY: PUT_YOUR_REBRICKABLE_API_KEY_HERE
+
+[MongoDB]
+URI: mongodb://localhost:27017

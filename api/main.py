@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 import configparser
 import urllib.request
-import os
 
 app = FastAPI()
 config = configparser.ConfigParser()
