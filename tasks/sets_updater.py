@@ -1,5 +1,5 @@
-import schedule
-import time
+import asyncio
+import json
 import configparser
 import urllib.request
 import motor.motor_asyncio
@@ -10,21 +10,32 @@ config.read('config.ini')
 client = motor.motor_asyncio.AsyncIOMotorClient(config['MongoDB']['URI'])
 db = client.legos
 
-def sets_updater():
-    print("Updating sets")
+async def update_sets(url):
+    request = urllib.request.Request(url+'?page_size=200&min_parts=10&min_year=2010')
+    request.add_header("Authorization", f"key {config['Api']['REBRICKABLE_API_KEY']}")
+    response = json.load(urllib.request.urlopen(request))
 
-    request = urllib.request.Request("https://rebrickable.com/api/v3/lego/sets/")
-    response = request.add_header("Authorization", f"key {config['Api']['REBRICKABLE_API_KEY']}")
+    for set in response['results']:
+        await db.sets.find_one_and_update(
+            {
+                "set_id": set['set_num']
+            }
+            ,{
+                "$set": {
+                    "set_id": set['set_num'],
+                    "name": set['name'],
+                }
+            },
+            upsert=True
+        )
 
-    print(response)
+    document_count = await db.sets.estimated_document_count()
+    print(f"Progress: {document_count/response['count']*100}%")
 
-    db.sets.insert_one({
-        "hello": "mongo"
-    })
+    if response['next'] is not None:
+        await update_sets(response['next'])
+    
+async def sets_updater():
+    await update_sets("https://rebrickable.com/api/v3/lego/sets/")
 
-    print("Sets updated")
-
-schedule.every(10).seconds.do(sets_updater)
-
-while True:
-    schedule.run_pending()
+asyncio.run(sets_updater())
