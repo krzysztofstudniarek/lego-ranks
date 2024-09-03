@@ -9,10 +9,15 @@ config.read('config.ini')
 
 @app.get("/")
 def read_root():
-    if 'REBRICKABLE_API_KEY' not in config['Api']:
-        return { "status": -1, "message": "Rebrickable API not reachable" }
+    return { "status": 200}
 
-    req = urllib.request.Request("https://rebrickable.com/api/v3/lego/sets/")
-    req.add_header("Authorization", f"key {config['Api']['REBRICKABLE_API_KEY']}")
-
-    return urllib.request.urlopen(req).read()
+@app.get("/sets/yearly_stats")
+def read_yearly_stats():
+    return {
+        "status": 200,
+        "data": [
+            {"year": 2010, "sets": 100, "avg_parts": 100},
+            {"year": 2011, "sets": 100, "avg_parts": 100},
+            {"year": 2012, "sets": 100, "avg_parts": 100},
+        ]
+    }
